@@ -192,7 +192,6 @@ simple-swap-w-front/
 - **Dark/Light Theme**: Support for both themes
 - **Visual Feedback**: Loading states and success/error messages
 - **Real-Time Validation**: Instant input verification
-- **Debug Panel**: Development info for troubleshooting
 
 ## 🔒 Security
 
@@ -230,7 +229,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 ## 👨‍💻 Author
 
-**Feerdus95** - Developer of the SimpleSwap project
+**Feerdus95** - Developer of this SimpleSwap contract's and frontend project
 
 ## 🙏 Acknowledgements
 
@@ -244,7 +243,6 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 - [x] **Contract interaction**: Complete frontend with all features
 - [x] **Development and Testing Environment**: Hardhat configured with coverage ≥50%
-- [x] **Instructor recommendations**: Implemented (if any)
 - [x] **Allowed tools**: Next.js, React, TypeScript, Wagmi
 - [x] **Storage**: GitHub repository
 - [x] **Deployment**: Frontend deployed on Vercel
