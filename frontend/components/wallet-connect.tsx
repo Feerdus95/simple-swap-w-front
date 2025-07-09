@@ -77,7 +77,11 @@ export function WalletConnect() {
         <Button 
           onClick={handleConnect}
           disabled={isConnecting}
-          className="bg-primary hover:bg-primary/90 text-white"
+          style={{
+            background: '#00ADB5',
+            border: '1px solid #00ADB5',
+            color: '#fff'
+          }}
         >
           {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
         </Button>
