@@ -1,0 +1,252 @@
+# SimpleSwap DEX - Module 4 Practical Project
+
+## 📋 Project Description
+
+SimpleSwap is a fully functional **Decentralized Exchange (DEX)** implementing an **Automated Market Maker (AMM)** with token swap and liquidity management features. This project was developed as a practical assignment for Module 4, meeting all specified requirements.
+
+## 🏗️ Architecture
+
+### Backend (Smart Contracts)
+- **SimpleSwap.sol**: Main DEX contract with swap and liquidity features
+- **TestTokenA.sol**: Test token TTA (18 decimals)
+- **TestTokenB.sol**: Test token TTB (6 decimals, similar to USDC)
+
+### Frontend (Next.js)
+- **Next.js 15** with App Router
+- **React 18** with TypeScript
+- **Wagmi/Viem** for blockchain interaction
+- **Shadcn/ui** for UI components
+- **Tailwind CSS** for styling
+
+## 🚀 Implemented Features
+
+### ✅ 1. Contract Interaction
+- **Wallet Connection**: Full MetaMask integration
+- **Token Swaps**: Swap TTA ↔ TTB with automatic price calculation
+- **Liquidity Management**: Add and remove liquidity from pools
+- **Price Display**: Real-time prices and pool statistics
+- **Token Faucet**: Obtain test tokens for testing
+
+### ✅ 2. Technical Features
+- **Input Validation**: Amount and address verification
+- **Error Handling**: Clear and specific error messages
+- **Slippage Protection**: Slippage configuration (5% default)
+- **Transaction Timeouts**: Configurable deadlines
+- **Token Approval**: Automatic approval flow
+
+### ✅ 3. Security
+- **Reentrancy Protection**: Implemented in smart contracts
+- **Slippage Validation**: Front-running protection
+- **Balance Verification**: Check balances before transactions
+- **Robust Error Handling**: Try-catch in all operations
+
+## 🛠️ Technologies Used
+
+### Smart Contracts
+- **Solidity ^0.8.20**
+- **OpenZeppelin Contracts**
+- **Hardhat** (for testing and deployment)
+
+### Frontend
+- **Next.js 15.2.4**
+- **React 18.2.0**
+- **TypeScript 5**
+- **Wagmi 2.15.6**
+- **Viem 2.31.7**
+- **Tailwind CSS 3.4.17**
+- **Shadcn/ui**
+
+### Testing
+- **Hardhat Testing Framework**
+- **Code coverage ≥50%**
+
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js 18+
+- npm or pnpm
+- MetaMask installed
+- Ethereum Sepolia account with test ETH
+
+### 1. Clone the repository
+```bash
+git clone <repository-url>
+cd simple-swap-w-front
+```
+
+### 2. Install dependencies
+```bash
+cd frontend
+npm install
+```
+
+### 3. Configure environment variables
+Create a `.env.local` file in the `frontend` folder:
+```env
+NEXT_PUBLIC_INFURA_API_KEY=your_infura_api_key
+```
+
+### 4. Run the project
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`
+
+## 🎯 How to Use the Application
+
+### 1. Connect Wallet
+- Open the app in your browser
+- Click on "Connect Wallet" and connect MetaMask
+- Make sure you are on the Sepolia network
+
+### 2. Get Test Tokens
+- Go to the "Faucet" tab
+- Click "Get 10" or "Get 100" for each token (TTA and TTB)
+- Confirm the transactions in MetaMask
+
+### 3. Create Liquidity Pool
+- Go to the "Liquidity" tab
+- Select TTA and TTB tokens
+- Approve both tokens ("Approve" buttons)
+- Enter the desired amounts
+- Click "Add Liquidity"
+
+### 4. Perform Swaps
+- Go to the "Swap" tab
+- Select input and output tokens
+- Enter the amount to swap
+- Review the expected output
+- Click "Swap"
+
+### 5. View Prices
+- Go to the "Prices" tab
+- Select the token pair
+- View prices and pool statistics
+
+## 🔧 Contract Configuration
+
+### Deployed Addresses (Sepolia)
+- **SimpleSwap**: `0xec94cf35f084b41e0ff196b4a23fd4d7c407afb8`
+- **TestTokenA (TTA)**: `0x207122a3b190486faed56d870f5b31f09903fe6b`
+- **TestTokenB (TTB)**: `0x9a7a2fb89fd2d24c3d6c9e05eba82d393838a24f`
+
+### Testing with Hardhat
+```bash
+cd contracts
+npm install
+npx hardhat test
+npx hardhat coverage
+```
+
+## 📊 Test Coverage
+
+The project includes comprehensive tests for all contracts with coverage ≥50%:
+
+```bash
+npx hardhat coverage
+```
+
+### Included Tests
+- ✅ Swap functions
+- ✅ Liquidity management
+- ✅ Price calculations
+- ✅ Security validations
+- ✅ Error handling
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+1. Connect your repository to Vercel
+2. Set up environment variables
+3. Automatic deployment on every push
+
+### Smart Contracts
+Contracts are deployed on Ethereum Sepolia and are fully functional.
+
+## 📝 Project Structure
+
+```
+simple-swap-w-front/
+├── contracts/                 # Smart contracts
+│   ├── SimpleSwap.sol        # Main DEX contract
+│   ├── TestTokenA.sol        # Test token A
+│   ├── TestTokenB.sol        # Test token B
+│   └── README.md             # Contracts documentation
+├── frontend/                 # Next.js application
+│   ├── app/                  # App Router
+│   ├── components/           # React components
+│   │   ├── swap-interface.tsx
+│   │   ├── liquidity-interface.tsx
+│   │   ├── price-display.tsx
+│   │   ├── token-faucet.tsx
+│   │   └── wallet-connect.tsx
+│   ├── lib/                  # Utilities and constants
+│   └── public/               # Static files
+└── README.md                 # This file
+```
+
+## 🎨 UI/UX Features
+
+- **Responsive Design**: Works on desktop and mobile
+- **Dark/Light Theme**: Support for both themes
+- **Visual Feedback**: Loading states and success/error messages
+- **Real-Time Validation**: Instant input verification
+- **Debug Panel**: Development info for troubleshooting
+
+## 🔒 Security
+
+### Smart Contracts
+- ✅ Reentrancy protection
+- ✅ Slippage validation
+- ✅ Overflow protection
+- ✅ Deadline validation
+- ✅ Zero address checks
+
+### Frontend
+- ✅ Input validation
+- ✅ Error handling
+- ✅ Transaction confirmation
+- ✅ Balance verification
+
+## 📈 Quality Metrics
+
+- **Test Coverage**: ≥50%
+- **Linting**: No errors
+- **TypeScript**: Strict mode enabled
+- **Performance**: Production optimized
+
+## 🤝 Contributing
+
+1. Fork the project
+2. Create a branch for your feature (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## 👨‍💻 Author
+
+**Feerdus95** - Developer of the SimpleSwap project
+
+## 🙏 Acknowledgements
+
+- OpenZeppelin for contract libraries
+- Vercel for the deployment platform
+- The Ethereum community for development tools
+
+---
+
+## ✅ Practical Project Requirements Checklist
+
+- [x] **Contract interaction**: Complete frontend with all features
+- [x] **Development and Testing Environment**: Hardhat configured with coverage ≥50%
+- [x] **Instructor recommendations**: Implemented (if any)
+- [x] **Allowed tools**: Next.js, React, TypeScript, Wagmi
+- [x] **Storage**: GitHub repository
+- [x] **Deployment**: Frontend deployed on Vercel
+
+**Project Status**: ✅ **COMPLETED AND FUNCTIONAL** 

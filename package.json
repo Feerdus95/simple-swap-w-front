@@ -1,0 +1,17 @@
+{
+  "name": "simple-swap-w-front",
+  "version": "1.0.0",
+  "description": "SimpleSwap es un **Decentralized Exchange (DEX)** completo que implementa un **Automated Market Maker (AMM)** con funcionalidades de swap de tokens y gestión de liquidez. Este proyecto fue desarrollado como trabajo práctico para el Módulo 4, cumpliendo con todos los requerimientos especificados.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.9",
+    "@types/minimatch": "^6.0.0"
+  }
+}
