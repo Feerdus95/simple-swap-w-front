@@ -10,50 +10,40 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Custom color palette
-        background: "#222831",
-        foreground: "#EEEEEE",
+        // Use CSS variables for dynamic theme support
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         card: {
-          DEFAULT: "#393E46",
-          foreground: "#EEEEEE",
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
         popover: {
-          DEFAULT: "#393E46",
-          foreground: "#EEEEEE",
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
         },
         primary: {
-          DEFAULT: "#00ADB5",
-          foreground: "#EEEEEE",
-          50: "#f0fdfe",
-          100: "#ccfbf1",
-          200: "#99f6e4",
-          300: "#5eead4",
-          400: "#2dd4bf",
-          500: "#00ADB5",
-          600: "#0891b2",
-          700: "#0e7490",
-          800: "#155e75",
-          900: "#164e63",
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          DEFAULT: "#393E46",
-          foreground: "#EEEEEE",
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         muted: {
-          DEFAULT: "#393E46",
-          foreground: "#EEEEEE",
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: "#00ADB5",
-          foreground: "#EEEEEE",
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
         destructive: {
-          DEFAULT: "#ef4444",
-          foreground: "#EEEEEE",
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
-        border: "#393E46",
-        input: "#393E46",
-        ring: "#00ADB5",
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
       },
       backgroundImage: {
         "gradient-dark": "linear-gradient(135deg, #222831 0%, #393E46 100%)",

@@ -125,6 +125,11 @@ export function TokenFaucet() {
                   onClick={() => handleMintToken(token.address, token.symbol, "10")}
                   disabled={isLoading}
                   className="flex-1"
+                  style={{
+                    background: '#00ADB5',
+                    border: '1px solid #00ADB5',
+                    color: '#fff'
+                  }}
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

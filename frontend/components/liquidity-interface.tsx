@@ -462,7 +462,7 @@ export function LiquidityInterface() {
         <TabsList className="grid w-full grid-cols-2 bg-card border border-border">
           <TabsTrigger
             value="add"
-            className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 data-[state=active]:!bg-[#00ADB5] data-[state=active]:!text-white data-[state=active]:!border-[#00ADB5] data-[state=active]:!border"
           >
             <Plus className="w-4 h-4" />
             Add Liquidity
@@ -556,8 +556,13 @@ export function LiquidityInterface() {
               Boolean(tokenBalanceA && amountA && parseEther(amountA) > tokenBalanceA) ||
               Boolean(tokenBalanceB && amountB && parseEther(amountB) > tokenBalanceB)
             }
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25 transition-all duration-200"
+            className="w-full shadow-lg hover:shadow-primary/25 transition-all duration-200"
             size="lg"
+            style={{
+              background: '#00ADB5',
+              border: '1px solid #00ADB5',
+              color: '#fff'
+            }}
           >
             {isLoading ? (
               <>

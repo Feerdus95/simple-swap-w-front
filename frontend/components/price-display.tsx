@@ -90,7 +90,15 @@ export function PriceDisplay() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-foreground">
                 <span>Current Price</span>
-                <Badge variant="outline" className="border-primary text-primary bg-primary/10">
+                <Badge
+                  variant="outline"
+                  className=""
+                  style={{
+                    border: '1px solid #00ADB5',
+                    color: '#00ADB5',
+                    background: 'rgba(0, 173, 181, 0.10)'
+                  }}
+                >
                   {getTokenSymbol(tokenA)}/{getTokenSymbol(tokenB)}
                 </Badge>
               </CardTitle>
@@ -98,7 +106,7 @@ export function PriceDisplay() {
             <CardContent>
               {price ? (
                 <div className="text-center">
-                  <div className="text-4xl font-bold text-primary mb-2">{formatPrice(price as bigint)}</div>
+                  <div className="text-4xl font-bold mb-2" style={{ color: '#00ADB5' }}>{formatPrice(price as bigint)}</div>
                   <span className="text-lg text-muted-foreground">{getTokenSymbol(tokenB)}</span>
                 </div>
               ) : (
@@ -119,13 +127,13 @@ export function PriceDisplay() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center bg-background p-4 rounded-lg border border-border">
-                    <div className="text-2xl font-semibold text-primary">
+                    <div className="text-2xl font-semibold" style={{ color: '#00ADB5' }}>
                       {Number.parseFloat(formatEther(reserves[0] as bigint)).toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">{getTokenSymbol(tokenA)}</div>
                   </div>
                   <div className="text-center bg-background p-4 rounded-lg border border-border">
-                    <div className="text-2xl font-semibold text-primary">
+                    <div className="text-2xl font-semibold" style={{ color: '#00ADB5' }}>
                       {Number.parseFloat(formatEther(reserves[1] as bigint)).toLocaleString()}
                     </div>
                     <div className="text-sm text-muted-foreground">{getTokenSymbol(tokenB)}</div>
@@ -140,7 +148,7 @@ export function PriceDisplay() {
             <Card className="bg-card border border-border hover:border-primary/50 transition-colors">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <TrendingUp className="w-8 h-8 mx-auto mb-2 text-primary" />
+                  <TrendingUp className="w-8 h-8 mx-auto mb-2" style={{ color: '#00ADB5' }} />
                   <div className="text-sm text-muted-foreground">24h High</div>
                   <div className="text-lg font-semibold text-foreground">-</div>
                 </div>
@@ -160,8 +168,8 @@ export function PriceDisplay() {
             <Card className="bg-card border border-border hover:border-primary/50 transition-colors">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="w-8 h-8 mx-auto mb-2 bg-primary/20 rounded-full flex items-center justify-center">
-                    <span className="text-primary font-bold">%</span>
+                  <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center" style={{ background: 'rgba(0, 173, 181, 0.20)' }}>
+                    <span style={{ color: '#00ADB5' }} className="font-bold">%</span>
                   </div>
                   <div className="text-sm text-muted-foreground">24h Change</div>
                   <div className="text-lg font-semibold text-foreground">-</div>

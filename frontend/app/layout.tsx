@@ -3,6 +3,9 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
 import { Suspense } from "react"
+import { AppHeader } from "@/components/app-header"
+import { Providers } from "@/components/providers"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -51,9 +54,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-          {children}
-        </Suspense>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Providers>
+            <AppHeader />
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              {children}
+            </Suspense>
+          </Providers>
+        </ThemeProvider>
         <Toaster position="top-right" />
       </body>
     </html>

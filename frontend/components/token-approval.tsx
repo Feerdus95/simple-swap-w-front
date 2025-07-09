@@ -147,7 +147,11 @@ export function TokenApproval({
           // If no specific amount, show disabled button
   if (amount === 0n) {
     return (
-      <Button disabled className={className}>
+      <Button disabled className={className} style={{
+        background: '#00ADB5',
+        border: '1px solid #00ADB5',
+        color: '#fff'
+      }}>
         Enter amount first
       </Button>
     );

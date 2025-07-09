@@ -205,17 +205,6 @@ export function SwapInterface() {
 
   // Handle swap execution
   const handleSwap = useCallback(async () => {
-    console.log('=== SWAP ATTEMPT ===');
-    console.log('Current state:', {
-      isConnected,
-      tokenIn,
-      tokenOut,
-      amountIn: parsedAmountIn?.toString(),
-      expectedOutput: expectedOutput?.toString(),
-      contractAddress: SIMPLESWAP_ADDRESS,
-      chainId: publicClient?.chain?.id
-    });
-
     // Enhanced validation
     if (!isConnected) {
       toast.error('Please connect your wallet first');
@@ -286,14 +275,6 @@ export function SwapInterface() {
 
       setIsSwapping(true);
       
-      console.log('Initiating swap with params:', {
-        tokenIn,
-        tokenOut,
-        amountIn: parsedAmountIn.toString(),
-        amountOut: expectedOutput.toString(),
-        to: address
-      });
-
       // Early return if publicClient or walletClient is not available
       if (!publicClient || !walletClient) {
         toast.error('Wallet client not available');
@@ -329,7 +310,6 @@ export function SwapInterface() {
       });
 
       if (receipt.status === 'success') {
-        console.log('Swap successful:', receipt);
         toast.success('Swap completed successfully!', { id: toastId });
         
         // Reset form
@@ -362,13 +342,6 @@ export function SwapInterface() {
 
   // Debug constants on mount
   useEffect(() => {
-    console.log('=== DEBUG CONSTANTS ===');
-    console.log('SIMPLESWAP_ADDRESS:', SIMPLESWAP_ADDRESS);
-    console.log('SUPPORTED_TOKENS:', SUPPORTED_TOKENS);
-    console.log('Current network:', publicClient?.chain?.id);
-    console.log('Wallet connected:', isConnected);
-    console.log('Wallet address:', address);
-    console.log('=======================');
   }, [isConnected, publicClient, address]);
 
   // Update UI state based on conditions
@@ -611,7 +584,12 @@ export function SwapInterface() {
               <Button
                 onClick={handleSwap}
                 disabled={isSwapDisabled}
-                className="w-full bg-primary"
+                className="w-full"
+                style={{
+                  background: '#00ADB5',
+                  border: '1px solid #00ADB5',
+                  color: '#fff'
+                }}
               >
                 {isSwapping ? (
                   <>
