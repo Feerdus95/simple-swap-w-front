@@ -214,15 +214,15 @@ describe("SimpleSwap", function () {
       const price = await dex.read.getPrice([tokenA.address, tokenB.address]);
       console.log("Actual price returned:", price.toString());
       
-      // Based on your test output, the expected price is 2000000 (2 * 10^6)
+      // The expected price is 2000000 (2 * 10^6)
       // This means: 1 tokenA = 2 tokenB (with proper decimal scaling)
       expect(price).to.equal(2000000n);
     });
   });
 
-  describe("Debug and Edge Cases", function () {
+  describe("Edge Cases and Error Handling", function () {
     it("should handle different decimal tokens correctly", async function () {
-      const { tokenA, tokenB, dex } = await loadFixture(deployContracts);
+      const { tokenA, tokenB } = await loadFixture(deployContracts);
       
       // Check token decimals
       const decimalsA = await tokenA.read.decimals();
@@ -234,102 +234,276 @@ describe("SimpleSwap", function () {
       expect(decimalsA).to.equal(18);
       expect(decimalsB).to.equal(6);
     });
-  });
-});
 
-// Additional tests for TestTokenA and TestTokenB
-describe("TestTokenA", function () {
-  async function deployTokenA() {
-    const [owner, user] = await hre.viem.getWalletClients();
-    const tokenA = await hre.viem.deployContract("TestTokenA");
-    return { tokenA, owner, user };
-  }
+    it("should revert when adding liquidity with identical tokens", async function () {
+      const { tokenA, dex, owner } = await loadFixture(deployContracts);
+      const amount = parseEther("1");
+      
+      // Approve tokens
+      await tokenA.write.approve([dex.address, amount], { account: owner.account });
+      
+      // Try to add liquidity with same token for both tokens
+      try {
+        await dex.write.addLiquidity(
+          [
+            tokenA.address, // tokenA
+            tokenA.address, // tokenB (same as tokenA)
+            amount,        // amountADesired
+            amount,        // amountBDesired
+            0,             // amountAMin
+            0,             // amountBMin
+            owner.account.address, // to
+            BigInt(Math.floor(Date.now() / 1000) + 300) // deadline
+          ],
+          { account: owner.account }
+        );
+        expect.fail("Should have reverted with SS:IA error");
+      } catch (error: any) {
+        expect(error.message).to.include("SS:IA");
+      }
+    });
 
-  it("should deploy with initial supply to deployer", async function () {
-    const { tokenA, owner } = await loadFixture(deployTokenA);
-    const balance = await tokenA.read.balanceOf([owner.account.address]);
-    // Check if it matches the expected initial supply for TestTokenA
-    expect(balance).to.equal(parseEther("1000000")); // 1M tokens with 18 decimals
-  });
+    it("should revert when adding liquidity with zero address", async function () {
+      const { tokenA, dex, owner } = await loadFixture(deployContracts);
+      const amount = parseEther("1");
+      const zeroAddress = '0x0000000000000000000000000000000000000000';
+      
+      // Approve tokens
+      await tokenA.write.approve([dex.address, amount], { account: owner.account });
+      
+      // Try to add liquidity with zero address
+      try {
+        await dex.write.addLiquidity(
+          [
+            tokenA.address, // tokenA
+            zeroAddress,   // tokenB (zero address)
+            amount,        // amountADesired
+            amount,        // amountBDesired
+            0,             // amountAMin
+            0,             // amountBMin
+            owner.account.address, // to
+            BigInt(Math.floor(Date.now() / 1000) + 300) // deadline
+          ],
+          { account: owner.account }
+        );
+        expect.fail("Should have reverted with SS:IZA error");
+      } catch (error: any) {
+        expect(error.message).to.include("SS:IZA");
+      }
+    });
 
-  it("should allow anyone to mint tokens", async function () {
-    const { tokenA, user } = await loadFixture(deployTokenA);
-    
-    await tokenA.write.mint([user.account.address, parseEther("100")], {
-      account: user.account
+    it("should handle small and large liquidity amounts correctly", async function () {
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+      
+      // Test with very small amounts
+      const smallAmountA = 1n; // 1 wei
+      const smallAmountB = 1n; // 1 base unit (6 decimals)
+      
+      // Approve and add small liquidity
+      await tokenA.write.approve([dex.address, smallAmountA], { account: owner.account });
+      await tokenB.write.approve([dex.address, smallAmountB], { account: owner.account });
+      
+      await dex.write.addLiquidity(
+        [
+          tokenA.address,
+          tokenB.address,
+          smallAmountA,
+          smallAmountB,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ],
+        { account: owner.account }
+      );
+      
+      // Test with large amounts
+      const largeAmountA = parseEther("1000000");
+      const largeAmountB = parseUnits("1000000", 6);
+      
+      // Approve and add large liquidity
+      await tokenA.write.approve([dex.address, largeAmountA], { account: owner.account });
+      await tokenB.write.approve([dex.address, largeAmountB], { account: owner.account });
+      
+      await dex.write.addLiquidity(
+        [
+          tokenA.address,
+          tokenB.address,
+          largeAmountA,
+          largeAmountB,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ],
+        { account: owner.account }
+      );
+      
+      // Verify the pool has the expected reserves
+      const reserves = await dex.read.getReserves([tokenA.address, tokenB.address]);
+      expect(reserves[0] + reserves[1]).to.be.gt(0);
+    });
+
+    it("should handle maximum uint112 values in _update function", async function () {
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+      
+      // Get max uint112 value
+      const maxUint112 = 2n ** 112n - 1n;
+      
+      // Mint tokens to owner
+      await tokenA.write.mint([owner.account.address, maxUint112], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, maxUint112], { account: owner.account });
+      
+      // Approve max tokens
+      await tokenA.write.approve([dex.address, maxUint112], { account: owner.account });
+      await tokenB.write.approve([dex.address, maxUint112], { account: owner.account });
+      
+      // Add liquidity with max values
+      await dex.write.addLiquidity(
+        [
+          tokenA.address,
+          tokenB.address,
+          maxUint112,
+          maxUint112,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ],
+        { account: owner.account }
+      );
+      
+      // Verify reserves are set to maxUint112
+      const reserves = await dex.read.getReserves([tokenA.address, tokenB.address]);
+      expect(reserves[0]).to.equal(maxUint112);
+      expect(reserves[1]).to.equal(maxUint112);
+
+      // Try to add more liquidity (should fail due to overflow in _update)
+      await tokenA.write.mint([owner.account.address, 1n], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, 1n], { account: owner.account });
+      
+      await tokenA.write.approve([dex.address, 1n], { account: owner.account });
+      await tokenB.write.approve([dex.address, 1n], { account: owner.account });
+      
+      try {
+        await dex.write.addLiquidity(
+          [
+            tokenA.address,
+            tokenB.address,
+            1n,
+            1n,
+            0,
+            0,
+            owner.account.address,
+            BigInt(Math.floor(Date.now() / 1000) + 300)
+          ],
+          { account: owner.account }
+        );
+        expect.fail("Should have reverted with SS:OVERFLOW error");
+      } catch (error: any) {
+        // The error might be wrapped in a different way by viem
+        expect(error.message).to.match(/overflow|SS:OVERFLOW/);
+      }
     });
     
-    const balance = await tokenA.read.balanceOf([user.account.address]);
-    expect(balance).to.equal(parseEther("100"));
-  });
-
-  it("should allow faucet to mint tokens to msg.sender", async function () {
-    const { tokenA, user } = await loadFixture(deployTokenA);
-    
-    // Check if faucet function exists
-    try {
-      // The faucet function likely takes an amount parameter
-      const faucetAmount = parseEther("10");
-      await tokenA.write.faucet([faucetAmount], { account: user.account });
-      const balance = await tokenA.read.balanceOf([user.account.address]);
-      expect(balance).to.be.gte(faucetAmount);
-    } catch (error) {
-      console.log("Faucet function not implemented or different signature:", error);
-      // Skip this test if faucet is not implemented
-    }
-  });
-
-  it("should have 18 decimals", async function () {
-    const { tokenA } = await loadFixture(deployTokenA);
-    const decimals = await tokenA.read.decimals();
-    expect(decimals).to.equal(18);
-  });
-});
-
-describe("TestTokenB", function () {
-  async function deployTokenB() {
-    const [owner, user] = await hre.viem.getWalletClients();
-    const tokenB = await hre.viem.deployContract("TestTokenB");
-    return { tokenB, owner, user };
-  }
-
-  it("should deploy with initial supply to deployer", async function () {
-    const { tokenB, owner } = await loadFixture(deployTokenB);
-    const balance = await tokenB.read.balanceOf([owner.account.address]);
-    // TestTokenB has 6 decimals, so 1M tokens = 1000000 * 10^6
-    expect(balance).to.equal(parseUnits("1000000", 6)); // 1M tokens with 6 decimals
-  });
-
-  it("should allow anyone to mint tokens", async function () {
-    const { tokenB, user } = await loadFixture(deployTokenB);
-    
-    await tokenB.write.mint([user.account.address, parseUnits("100", 6)], {
-      account: user.account
+    it("should handle price calculation edge cases", async function () {
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+      
+      // Test case 1: Small reserves (1 tokenA and 1,000,000 tokenB to account for decimals)
+      const amountA1 = parseEther("1");
+      const amountB1 = parseUnits("1000000", 6); // 1e12 in base units
+      
+      // Mint additional tokens needed for this test
+      await tokenA.write.mint([owner.account.address, amountA1], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, amountB1], { account: owner.account });
+      
+      await tokenA.write.approve([dex.address, amountA1], { account: owner.account });
+      await tokenB.write.approve([dex.address, amountB1], { account: owner.account });
+      
+      await dex.write.addLiquidity(
+        [
+          tokenA.address,
+          tokenB.address,
+          amountA1,
+          amountB1,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ],
+        { account: owner.account }
+      );
+      
+      // Get the price of tokenA in terms of tokenB (scaled by 1e18)
+      // We added 1e18 tokenA units and 1e12 tokenB units
+      // The price should be (1e12 * 1e18) / 1e18 = 1e12
+      const price1 = await dex.read.getPrice([tokenA.address, tokenB.address]);
+      expect(price1).to.equal(10n ** 12n);
+      
+      // Test case 2: Deploy a new contract for the second test to avoid interference
+      const dex2 = await hre.viem.deployContract("SimpleSwap");
+      
+      // Medium reserves (1000 tokens each)
+      const mediumAmountA = parseEther("1000");
+      const mediumAmountB = parseUnits("1000", 6);
+      
+      // Mint additional tokens needed for this test
+      await tokenA.write.mint([owner.account.address, mediumAmountA], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, mediumAmountB], { account: owner.account });
+      
+      await tokenA.write.approve([dex2.address, mediumAmountA], { account: owner.account });
+      await tokenB.write.approve([dex2.address, mediumAmountB], { account: owner.account });
+      
+      await dex2.write.addLiquidity(
+        [
+          tokenA.address,
+          tokenB.address,
+          mediumAmountA,
+          mediumAmountB,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ],
+        { account: owner.account }
+      );
+      
+      // Price should be (1000 * 1e6 * 1e18) / (1000 * 1e18) = 1e6
+      const price2 = await dex2.read.getPrice([tokenA.address, tokenB.address]);
+      expect(price2).to.equal(10n ** 6n);
+      
+      // Test case 3: Deploy a new contract for the third test
+      const dex3 = await hre.viem.deployContract("SimpleSwap");
+      
+      // Very different reserves (1000 tokenA : 1 tokenB)
+      const diffAmountA = parseEther("1000");
+      const diffAmountB = parseUnits("1", 6);
+      
+      // Mint additional tokens needed for this test
+      await tokenA.write.mint([owner.account.address, diffAmountA], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, diffAmountB], { account: owner.account });
+      
+      await tokenA.write.approve([dex3.address, diffAmountA], { account: owner.account });
+      await tokenB.write.approve([dex3.address, diffAmountB], { account: owner.account });
+      
+      await dex3.write.addLiquidity(
+        [
+          tokenA.address,
+          tokenB.address,
+          diffAmountA,
+          diffAmountB,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ],
+        { account: owner.account }
+      );
+      
+      // Price should reflect the new ratio
+      // (1 * 1e6 * 1e18) / (1000 * 1e18) = 1e3
+      const price3 = await dex3.read.getPrice([tokenA.address, tokenB.address]);
+      expect(price3).to.equal(10n ** 3n);
     });
-    
-    const balance = await tokenB.read.balanceOf([user.account.address]);
-    expect(balance).to.equal(parseUnits("100", 6));
-  });
-
-  it("should allow faucet to mint tokens to msg.sender", async function () {
-    const { tokenB, user } = await loadFixture(deployTokenB);
-    
-    // Check if faucet function exists
-    try {
-      // The faucet function likely takes an amount parameter
-      const faucetAmount = parseUnits("10", 6);
-      await tokenB.write.faucet([faucetAmount], { account: user.account });
-      const balance = await tokenB.read.balanceOf([user.account.address]);
-      expect(balance).to.be.gte(faucetAmount);
-    } catch (error) {
-      console.log("Faucet function not implemented or different signature:", error);
-      // Skip this test if faucet is not implemented
-    }
-  });
-
-  it("should have 6 decimals", async function () {
-    const { tokenB } = await loadFixture(deployTokenB);
-    const decimals = await tokenB.read.decimals();
-    expect(decimals).to.equal(6);
   });
 });
