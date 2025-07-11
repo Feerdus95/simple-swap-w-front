@@ -471,13 +471,18 @@ contract SimpleSwap is ReentrancyGuard {
      * @notice Reverts if:
      * - Input amount is zero
      * - Reserves are zero
-     * @dev Uses constant product formula: amountOut = (amountIn * reserveOut) / (reserveIn + amountIn)
+     * @dev Uses constant product formula with 0.3% fee:
+     * amountOut = (amountIn * 997 * reserveOut) / (reserveIn * 1000 + amountIn * 997)
      */
     function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) public pure returns (uint256 amountOut) {
         require(amountIn > 0, "SS:INA");
         require(reserveIn > 0 && reserveOut > 0, "SS:IL");
-        uint256 numerator = amountIn * reserveOut;
-        uint256 denominator = reserveIn + amountIn;
+        
+        // Apply 0.3% fee (997/1000)
+        uint256 amountInWithFee = amountIn * 997;
+        uint256 numerator = amountInWithFee * reserveOut;
+        uint256 denominator = (reserveIn * 1000) + amountInWithFee;
+        
         amountOut = numerator / denominator;
     }
 

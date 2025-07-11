@@ -147,7 +147,7 @@ The app will be available at `http://localhost:3000`
 
 ### Deployed Addresses (Sepolia)
 
-- **SimpleSwap**: `0x0368b74b162d748010e3e1089c716921c4033529`
+- **SimpleSwap**: `0x4e136525bb27e400a30a0ae63051db55b5d3bff8`
 - **TestTokenA (TTA)**: `0xd6ae949f6405c366d23cc30422d684b6e76551ca`
 - **TestTokenB (TTB)**: `0xd35dad90ed974961c5299654def0a87478d82a15`
 
