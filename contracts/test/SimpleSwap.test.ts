@@ -563,8 +563,9 @@ describe("SimpleSwap", function () {
   
     it("should swap successfully when output equals amountOutMin", async function () {
       // Verifies swap succeeds if output amount is exactly equal to amountOutMin.
+      // Uses the 0.3% swap fee formula (997/1000).
       const { tokenA, tokenB, dex, user, owner, publicClient } = await loadFixture(deployContracts);
-  
+    
       await tokenA.write.approve([dex.address, parseEther("10")], { account: owner.account });
       await tokenB.write.approve([dex.address, parseUnits("20", 6)], { account: owner.account });
       await dex.write.addLiquidity([
@@ -572,16 +573,21 @@ describe("SimpleSwap", function () {
         parseEther("10"), parseUnits("20", 6), owner.account.address,
         BigInt(Math.floor(Date.now() / 1000) + 100)
       ]);
-  
+    
       await tokenA.write.approve([dex.address, parseEther("1")], { account: user.account });
-  
-      // Calculates the exact output using the constant product formula.
+    
+      // Calculate the exact output using the constant product formula with 0.3% fee (997/1000)
       const amountIn = parseEther("1");
       const reserves = await dex.read.getReserves([tokenA.address, tokenB.address]);
       const reserveA = reserves[0];
       const reserveB = reserves[1];
-      const expectedOut = amountIn * BigInt(reserveB) / (BigInt(reserveA) + amountIn);
-  
+    
+      // amountOut = (amountIn * 997 * reserveB) / (reserveA * 1000 + amountIn * 997)
+      const amountInWithFee = amountIn * 997n;
+      const numerator = amountInWithFee * reserveB;
+      const denominator = reserveA * 1000n + amountInWithFee;
+      const expectedOut = numerator / denominator;
+    
       const swapHash = await dex.write.swapExactTokensForTokens([
         amountIn,
         expectedOut,
@@ -589,10 +595,10 @@ describe("SimpleSwap", function () {
         user.account.address,
         BigInt(Math.floor(Date.now() / 1000) + 100)
       ], { account: user.account });
-  
+    
       const swapReceipt = await publicClient.getTransactionReceipt({ hash: swapHash });
       expect(swapReceipt.status).to.equal("success");
-  
+    
       const balance = await tokenB.read.balanceOf([user.account.address]);
       expect(balance).to.be.gte(expectedOut);
     });

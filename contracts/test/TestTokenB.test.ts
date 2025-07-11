@@ -19,9 +19,16 @@ describe("TestTokenB", function () {
 
   it("should deploy with initial supply to deployer", async function () {
     const balance = await token.read.balanceOf([owner.account.address]);
-    // TestTokenB has 6 decimals, so use parseUnits with 6 decimals
-    // The contract mints 1,000,000 tokens with 6 decimals = 1,000,000 * 10^6
-    expect(balance).to.equal(parseUnits("1000000", 6));
+    const expectedSupply = parseUnits("1000000", 6); // 1M tokens with 6 decimals
+    expect(balance).to.equal(expectedSupply);
+    
+    // Also verify total supply matches
+    const totalSupply = await token.read.totalSupply();
+    expect(totalSupply).to.equal(expectedSupply);
+    
+    // Verify decimals
+    const decimals = await token.read.decimals();
+    expect(decimals).to.equal(6);
   });
 
   it("should have correct name and symbol", async function () {
@@ -175,6 +182,79 @@ describe("TestTokenB", function () {
       await tx;
       expect(await token.read.balanceOf([user.account.address])).to.equal(initialUserBalance + amount);
       expect(await token.read.balanceOf([owner.account.address])).to.equal(initialOwnerBalance - amount);
+    });
+  });
+
+  describe("ERC20 edge cases", function () {
+    it("should revert when transferring to the zero address", async function () {
+      const amount = parseUnits("1", 6);
+      try {
+        await token.write.transfer(
+          ['0x0000000000000000000000000000000000000000', amount],
+          { account: owner.account }
+        );
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InvalidReceiver');
+      }
+    });
+  
+    it("should revert when transferring more than balance", async function () {
+      const balance = await token.read.balanceOf([owner.account.address]);
+      const amount = balance + parseUnits("1", 6);
+      try {
+        await token.write.transfer(
+          [user.account.address, amount],
+          { account: owner.account }
+        );
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InsufficientBalance');
+      }
+    });
+  
+    it("should allow approve and use transferFrom", async function () {
+      // Approve user to spend owner's tokens
+      const amount = parseUnits("10", 6);
+      await token.write.approve(
+        [user.account.address, amount],
+        { account: owner.account }
+      );
+      
+      // transferFrom as user, moving tokens from owner to user
+      await token.write.transferFrom(
+        [owner.account.address, user.account.address, amount],
+        { account: user.account }
+      );
+      
+      const newBalance = await token.read.balanceOf([user.account.address]);
+      expect(newBalance).to.be.gte(amount);
+    });
+  
+    it("should revert when transferFrom without enough allowance", async function () {
+      const amount = parseUnits("1", 6);
+      try {
+        await token.write.transferFrom(
+          [owner.account.address, user.account.address, amount],
+          { account: user.account }
+        );
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InsufficientAllowance');
+      }
+    });
+  
+    it("should revert when approving to the zero address", async function () {
+      const amount = parseUnits("1", 6);
+      try {
+        await token.write.approve(
+          ['0x0000000000000000000000000000000000000000', amount],
+          { account: owner.account }
+        );
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InvalidSpender');
+      }
     });
   });
 });

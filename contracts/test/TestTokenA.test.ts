@@ -16,7 +16,17 @@ describe("TestTokenA", function () {
   });
 
   it("should deploy with initial supply to deployer", async function () {
-    expect(await token.balanceOf(owner.address)).to.equal(initialSupply);
+    const balance = await token.balanceOf(owner.address);
+    const expectedSupply = ethers.parseUnits("1000000", 18); // 1M tokens with 18 decimals
+    expect(balance).to.equal(expectedSupply);
+    
+    // Also verify total supply matches
+    const totalSupply = await token.totalSupply();
+    expect(totalSupply).to.equal(expectedSupply);
+    
+    // Verify decimals
+    const decimals = await token.decimals();
+    expect(decimals).to.equal(18);
   });
 
   it("should have correct name and symbol", async function () {
@@ -125,6 +135,56 @@ describe("TestTokenA", function () {
       await expect(token.transfer(user.address, amount))
         .to.emit(token, "Transfer")
         .withArgs(owner.address, user.address, amount);
+    });
+  });
+
+  describe("ERC20 edge cases", function () {
+    it("should revert when transferring to the zero address", async function () {
+      const amount = ethers.parseUnits("1", 18);
+      try {
+        await token.transfer(ethers.ZeroAddress, amount);
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InvalidReceiver');
+      }
+    });
+  
+    it("should revert when transferring more than balance", async function () {
+      const balance = await token.balanceOf(owner.address);
+      const amount = balance + ethers.parseUnits("1", 18);
+      try {
+        await token.transfer(user.address, amount);
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InsufficientBalance');
+      }
+    });
+  
+    it("should allow approve and use transferFrom", async function () {
+      const amount = ethers.parseUnits("10", 18);
+      await token.approve(user.address, amount);
+      await token.connect(user).transferFrom(owner.address, user.address, amount);
+      expect(await token.balanceOf(user.address)).to.be.gte(amount);
+    });
+  
+    it("should revert when transferFrom without enough allowance", async function () {
+      const amount = ethers.parseUnits("1", 18);
+      try {
+        await token.connect(user).transferFrom(owner.address, user.address, amount);
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InsufficientAllowance');
+      }
+    });
+  
+    it("should revert when approving to the zero address", async function () {
+      const amount = ethers.parseUnits("1", 18);
+      try {
+        await token.approve(ethers.ZeroAddress, amount);
+        expect.fail("Expected transaction to revert");
+      } catch (error) {
+        expect((error as Error).message).to.include('ERC20InvalidSpender');
+      }
     });
   });
 });

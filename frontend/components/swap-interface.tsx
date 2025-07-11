@@ -59,8 +59,35 @@ export function SwapInterface({ onNavigateToLiquidity }: SwapInterfaceProps) {
     }
   }, [amountIn]);
 
-  // Check token balance with loading state
-  const { data: tokenBalance, isLoading: isBalanceLoading } = useReadContract({
+  // Token balance with auto-refresh on block changes
+  const [balanceRefreshKey, setBalanceRefreshKey] = useState(0);
+  
+  // Function to force balance refresh
+  const refreshBalances = useCallback(() => {
+    setBalanceRefreshKey(prev => prev + 1);
+  }, []);
+
+  // Watch for new blocks and refresh balances
+  useEffect(() => {
+    if (!publicClient || !address) return;
+
+    const unwatch = publicClient.watchBlockNumber({
+      onBlockNumber: () => {
+        refreshBalances();
+      },
+    });
+
+    return () => {
+      unwatch();
+    };
+  }, [publicClient, address, refreshBalances]);
+
+  // Token balance query with auto-refresh
+  const { 
+    data: tokenBalance, 
+    isLoading: isBalanceLoading,
+    refetch: refetchBalance
+  } = useReadContract({
     address: tokenIn as Address,
     abi: [
       {
@@ -73,10 +100,14 @@ export function SwapInterface({ onNavigateToLiquidity }: SwapInterfaceProps) {
     ],
     functionName: "balanceOf",
     args: address ? [address] : undefined,
-    query: {
-      enabled: !!(tokenIn && address),
-    },
   });
+
+  // Auto-refresh balance when balanceRefreshKey changes
+  useEffect(() => {
+    if (tokenIn && address) {
+      refetchBalance();
+    }
+  }, [balanceRefreshKey, tokenIn, address, refetchBalance]);
 
   // Function to check if pool exists
   const checkPoolExists = useCallback(async (tokenA: string, tokenB: string): Promise<boolean> => {
@@ -557,12 +588,36 @@ export function SwapInterface({ onNavigateToLiquidity }: SwapInterfaceProps) {
             </>
           )}
 
-          {/* Expected Output */}
-          {expectedOutput !== undefined && (
-            <div className="text-sm text-muted-foreground">
-              Expected Output: {formatEther(expectedOutput)} {tokens.find(t => t.address === tokenOut)?.symbol}
-            </div>
-          )}
+          {/* Price and Fee Information */}
+          <div className="space-y-2 text-sm">
+            {/* Exchange Rate */}
+            {reserves && reserves[0] > 0n && reserves[1] > 0n && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Exchange Rate:</span>
+                <span className="font-medium">
+                  1 {tokens.find(t => t.address === tokenIn)?.symbol} = {formatEther((reserves[1] * parseEther('1')) / reserves[0])} {tokens.find(t => t.address === tokenOut)?.symbol}
+                </span>
+              </div>
+            )}
+
+            {/* Expected Output */}
+            {expectedOutput !== undefined && parsedAmountIn && parsedAmountIn > 0n && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Expected Output:</span>
+                  <span className="font-medium">
+                    {formatEther(expectedOutput)} {tokens.find(t => t.address === tokenOut)?.symbol}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Price impact: {reserves ? (((Number(expectedOutput) - Number(reserves[1] * parsedAmountIn / reserves[0])) / Number(reserves[1] * parsedAmountIn / reserves[0]) * 100)).toFixed(2) : '0.00'}%
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Includes 0.3% trading fee
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Errors */}
           {isReservesError && (

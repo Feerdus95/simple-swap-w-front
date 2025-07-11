@@ -1,5 +1,13 @@
 # SimpleSwap DEX - Module 4 Practical Project
 
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Coverage Status](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)]()
+[![Vercel](https://vercelbadge.vercel.app/api/simple-swap-w-front.vercel.app)](https://simple-swap-w-front.vercel.app)
+
+> 🌐 **Live Demo:** [simple-swap-w-front.vercel.app](https://simple-swap-w-front.vercel.app)
+
+---
+
 ## 📋 Project Description
 
 SimpleSwap is a fully functional **Decentralized Exchange (DEX)** implementing an **Automated Market Maker (AMM)** with token swap and liquidity management features. This project was developed as a practical assignment for Module 4, meeting all specified requirements.
@@ -45,6 +53,11 @@ SimpleSwap is a fully functional **Decentralized Exchange (DEX)** implementing a
 - **Balance Verification**: Check balances before transactions
 - **Robust Error Handling**: Try-catch in all operations
 
+### ✅ 4. User-Facing DEX Features
+
+- **Price Impact & Slippage Info**: Transparent display of price impact and expected output, showing real AMM effects and fee.
+- **Approve/Swap Two-Step Flow**: Following DeFi and ERC-20 security standards, all swaps require explicit “Approve” before “Swap”.
+
 ## 🛠️ Technologies Used
 
 ### Smart Contracts
@@ -66,7 +79,13 @@ SimpleSwap is a fully functional **Decentralized Exchange (DEX)** implementing a
 ### Testing
 
 - **Hardhat Testing Framework**
-- **Code coverage ≥88%**
+- **Test Suites**: 3 (95 tests in total)
+- **Code coverage**:
+  - **Total**: 100% lines, 88.18% branches, 100% functions
+  - **SimpleSwap.sol**: 100% lines, 86.73% branches, 100% functions
+  - **TestHelper.sol**: 100% lines, 100% branches, 100% functions
+  - **TestTokenA.sol**: 100% lines, 100% branches, 100% functions
+  - **TestTokenB.sol**: 100% lines, 100% branches, 100% functions
 
 ## 📦 Installation & Setup
 
@@ -134,7 +153,8 @@ The app will be available at `http://localhost:3000`
 - Go to the "Swap" tab
 - Select input and output tokens
 - Enter the amount to swap
-- Review the expected output
+- Review the expected output, price impact and AMM rate shown
+- Approve the swap (if first time using the app, "Approve" button)
 - Click "Swap"
 
 ### 5. View Prices
@@ -142,6 +162,18 @@ The app will be available at `http://localhost:3000`
 - Go to the "Prices" tab
 - Select the token pair
 - View prices and pool statistics
+
+### Price Impact
+
+- Price Impact shows how much your swap deviates (as a %) from the current pool rate, due to the constant product formula (x \* y = k) and pool fee.
+- High Price Impact can occur with small pools or large trades. This is expected and normal in AMMs.
+
+### Approve Step
+
+- Approve Step is a security measure (ERC-20 standard).
+- You must approve the DEX contract before it can spend your tokens.
+- This protect your funds and is required by all major DeFi protocols.
+- You only need to approve once per token per contract.
 
 ## 🔧 Contract Configuration
 
