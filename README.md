@@ -2,7 +2,7 @@
 
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Coverage Status](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)]()
-[![Vercel](https://vercelbadge.vercel.app/api/simple-swap-w-front.vercel.app)](https://simple-swap-w-front.vercel.app)
+[![Vercel](https://vercelbadge.vercel.app/api/datejer/vercel-badge)](https://simple-swap-w-front.vercel.app)
 
 > 🌐 **Live Demo:** [simple-swap-w-front.vercel.app](https://simple-swap-w-front.vercel.app)
 
