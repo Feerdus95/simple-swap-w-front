@@ -1,6 +1,6 @@
 import type { Address } from "viem";
 
-export const SIMPLESWAP_ADDRESS: Address = "0xec94cf35f084b41e0ff196b4a23fd4d7c407afb8";
+export const SIMPLESWAP_ADDRESS: Address = "0x0368b74b162d748010e3e1089c716921c4033529";
 export const SIMPLESWAP_ABI = [
   // Events
   {
@@ -150,14 +150,14 @@ export const SUPPORTED_TOKENS: TokenInfo[] = [
   {
     symbol: "TTA",
     name: "TestTokenA",
-    address: "0x207122a3b190486faed56d870f5b31f09903fe6b",
+    address: "0xd6ae949f6405c366d23cc30422d684b6e76551ca",
     decimals: 18,
     logoURI: "https://placehold.co/32/blue/white?text=TTA"
   },
   {
     symbol: "TTB",
     name: "TestTokenB",
-    address: "0x9a7a2fb89fd2d24c3d6c9e05eba82d393838a24f",
+    address: "0xd35dad90ed974961c5299654def0a87478d82a15",
     decimals: 6,
     logoURI: "https://placehold.co/32/green/white?text=TTB"
   }

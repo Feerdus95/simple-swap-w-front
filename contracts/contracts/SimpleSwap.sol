@@ -492,11 +492,16 @@ contract SimpleSwap is ReentrancyGuard {
     function getPrice(address tokenA, address tokenB) external view returns (uint256 price) {
         (address t0, address t1) = sortTokens(tokenA, tokenB);
         Pool storage pool = pools[t0][t1];
-        require(pool.reserveA > 0 && pool.reserveB > 0, "SS:RNI");
+        
+        // Cache storage variables to minimize state reads
+        uint112 reserveA = pool.reserveA;
+        uint112 reserveB = pool.reserveB;
+        
+        require(reserveA > 0 && reserveB > 0, "SS:RNI");
 
         price = tokenA == t0
-            ? (uint256(pool.reserveB) * 1e18) / pool.reserveA
-            : (uint256(pool.reserveA) * 1e18) / pool.reserveB;
+            ? (uint256(reserveB) * 1e18) / reserveA
+            : (uint256(reserveA) * 1e18) / reserveB;
     }
 
     // --- Internal Helpers ---
@@ -557,13 +562,12 @@ contract SimpleSwap is ReentrancyGuard {
         // Check for overflow before updating reserves
         require(reserveA <= type(uint112).max && reserveB <= type(uint112).max, "SS:OVERFLOW");
         
-        // Update reserves in the correct order based on token sorting
-        if (tokenA == token0) {
-            pool.reserveA = uint112(reserveA);
-            pool.reserveB = uint112(reserveB);
-        } else {
-            pool.reserveA = uint112(reserveB);
-            pool.reserveB = uint112(reserveA);
-        }
+        // Cache the values to write
+        uint112 newReserveA = uint112(tokenA == token0 ? reserveA : reserveB);
+        uint112 newReserveB = uint112(tokenA == token0 ? reserveB : reserveA);
+        
+        // Single SSTORE operation for each reserve
+        pool.reserveA = newReserveA;
+        pool.reserveB = newReserveB;
     }
 }

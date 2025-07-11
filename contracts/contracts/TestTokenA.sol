@@ -15,7 +15,9 @@ contract TestTokenA is ERC20 {
      * @dev Mints initial supply to the deployer (1 million tokens)
      */
     constructor() ERC20("TestTokenA", "TTA") {
-        _mint(msg.sender, 1_000_000 * 10**decimals());
+        // Mint initial supply to deployer
+        uint256 initialSupply = 1_000_000 * 10**decimals();
+        _mint(msg.sender, initialSupply);
     }
 
     /**
@@ -24,8 +26,11 @@ contract TestTokenA is ERC20 {
      * @param to The address that will receive the minted tokens
      * @param amount The amount of tokens to mint (in wei)
      */
-    function mint(address to, uint256 amount) public {
+    function mint(address to, uint256 amount) public returns (bool) {
+        require(to != address(0), "ERC20: mint to the zero address");
+        require(amount > 0, "Amount must be greater than zero");
         _mint(to, amount);
+        return true;
     }
 
     /**
@@ -42,7 +47,9 @@ contract TestTokenA is ERC20 {
      * @dev Mints tokens to the message sender's address
      * @param amount The amount of tokens to mint (in wei)
      */
-    function faucet(uint256 amount) external {
+    function faucet(uint256 amount) external returns (bool) {
+        require(amount > 0, "Amount must be greater than zero");
         _mint(msg.sender, amount);
+        return true;
     }
 }

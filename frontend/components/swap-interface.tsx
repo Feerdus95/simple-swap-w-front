@@ -15,7 +15,11 @@ import { TokenApproval } from "@/components/token-approval"
 
 
 
-export function SwapInterface() {
+interface SwapInterfaceProps {
+  onNavigateToLiquidity: () => void;
+}
+
+export function SwapInterface({ onNavigateToLiquidity }: SwapInterfaceProps) {
   // ALL HOOKS MUST BE CALLED FIRST - NO EARLY RETURNS ABOVE THIS LINE
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
@@ -55,8 +59,8 @@ export function SwapInterface() {
     }
   }, [amountIn]);
 
-  // Check token balance
-  const { data: tokenBalance } = useReadContract({
+  // Check token balance with loading state
+  const { data: tokenBalance, isLoading: isBalanceLoading } = useReadContract({
     address: tokenIn as Address,
     abi: [
       {
@@ -237,9 +241,22 @@ export function SwapInterface() {
       return;
     }
 
-    // Check token balance
-    if (tokenBalance && parsedAmountIn && tokenBalance < parsedAmountIn) {
-      toast.error(`Insufficient ${tokens.find(t => t.address === tokenIn)?.symbol} balance`);
+    // Check token balance with better validation and loading state
+    if (isBalanceLoading) {
+      toast.loading('Checking token balance...');
+      return;
+    }
+
+    if (!tokenBalance && tokenBalance !== 0n) {
+      toast.error('Could not fetch token balance. Please try again.');
+      return;
+    }
+
+    if (parsedAmountIn > tokenBalance) {
+      const tokenSymbol = tokens.find(t => t.address === tokenIn)?.symbol || 'tokens';
+      const formattedBalance = parseFloat(formatEther(tokenBalance)).toFixed(6);
+      const formattedAmount = parseFloat(amountIn).toFixed(6);
+      toast.error(`Insufficient balance. You have ${formattedBalance} ${tokenSymbol} but are trying to swap ${formattedAmount} ${tokenSymbol}`);
       return;
     }
 
@@ -434,7 +451,7 @@ export function SwapInterface() {
           </div>
         </div>
         <Button 
-          onClick={() => window.location.hash = '#liquidity'}
+          onClick={onNavigateToLiquidity}
           className="mt-2"
         >
           Go to Liquidity

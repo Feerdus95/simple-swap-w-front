@@ -94,7 +94,7 @@ export default function Home() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <SwapInterface />
+                  <SwapInterface onNavigateToLiquidity={() => setActiveTab("liquidity")} />
                 </CardContent>
               </Card>
             )}
