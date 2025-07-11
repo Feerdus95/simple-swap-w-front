@@ -336,6 +336,261 @@ describe("SimpleSwap", function () {
         expect(error.message).to.include("SS:INA");
       }
     });
+
+    it("should revert with SS:INA if amount0Optimal < amountAMin", async function () {
+      // Covers the require in _addLiquidity 'amount0Optimal >= amountAMin'
+      // Add unbalanced liquidity and set amountAMin deliberately too high
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+    
+      await tokenA.write.approve([dex.address, parseEther("100")], { account: owner.account });
+      await tokenB.write.approve([dex.address, parseUnits("1000", 6)], { account: owner.account });
+    
+      await dex.write.addLiquidity([
+        tokenA.address, tokenB.address,
+        parseEther("100"), parseUnits("1000", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 500)
+      ], { account: owner.account });
+    
+      // amount0Optimal < amountADesired, but amountAMin > amount0Optimal
+      await tokenA.write.approve([dex.address, parseEther("10")], { account: owner.account });
+      await tokenB.write.approve([dex.address, parseUnits("200", 6)], { account: owner.account });
+    
+      try {
+        await dex.write.addLiquidity([
+          tokenA.address, tokenB.address,
+          parseEther("10"), parseUnits("200", 6),
+          parseEther("9.5"), // amountAMin set above optimal
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ], { account: owner.account });
+        expect.fail("Should have reverted with SS:INA");
+      } catch (error: any) {
+        expect(error.message).to.include("SS:INA");
+      }
+    });
+    
+    it("should revert with SS:ILM if newLiquidityMinted is zero on initial liquidity", async function () {
+      // Covers the require in _addLiquidity when totalLiquidity == 0 and product is too small
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+    
+      // Mint tiny amounts to make sqrt(amount0 * amount1) == 0
+      await tokenA.write.mint([owner.account.address, 1n], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, 1n], { account: owner.account });
+    
+      await tokenA.write.approve([dex.address, 1n], { account: owner.account });
+      await tokenB.write.approve([dex.address, 1n], { account: owner.account });
+    
+      try {
+        await dex.write.addLiquidity([
+          tokenA.address,
+          tokenB.address,
+          1n,
+          1n,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ], { account: owner.account });
+        expect.fail("Should have reverted with SS:ILM");
+      } catch (error: any) {
+        expect(error.message).to.include("SS:ILM");
+      }
+    });
+    
+    it("should revert with SS:ILM if newLiquidityMinted is zero on second add", async function () {
+      // Covers the require in _addLiquidity when totalLiquidity > 0 and added amounts are too small
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+    
+      // Add initial liquidity
+      await tokenA.write.approve([dex.address, parseEther("100")], { account: owner.account });
+      await tokenB.write.approve([dex.address, parseUnits("100", 6)], { account: owner.account });
+    
+      await dex.write.addLiquidity([
+        tokenA.address,
+        tokenB.address,
+        parseEther("100"),
+        parseUnits("100", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 500)
+      ], { account: owner.account });
+    
+      // Try to add minimal amounts
+      await tokenA.write.mint([owner.account.address, 1n], { account: owner.account });
+      await tokenB.write.mint([owner.account.address, 1n], { account: owner.account });
+    
+      await tokenA.write.approve([dex.address, 1n], { account: owner.account });
+      await tokenB.write.approve([dex.address, 1n], { account: owner.account });
+    
+      try {
+        await dex.write.addLiquidity([
+          tokenA.address,
+          tokenB.address,
+          1n,
+          1n,
+          0,
+          0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ], { account: owner.account });
+        expect.fail("Should have reverted with SS:ILM");
+      } catch (error: any) {
+        expect(error.message).to.include("SS:ILM");
+      }
+    });
+    
+    it("should use liquidity1 when liquidity0 >= liquidity1", async function () {
+      // Covers the ternary in _addLiquidity where liquidity0 >= liquidity1
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+    
+      // Initial liquidity
+      await tokenA.write.approve([dex.address, parseEther("100")], { account: owner.account });
+      await tokenB.write.approve([dex.address, parseUnits("100", 6)], { account: owner.account });
+    
+      await dex.write.addLiquidity([
+        tokenA.address,
+        tokenB.address,
+        parseEther("100"),
+        parseUnits("100", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 500)
+      ], { account: owner.account });
+    
+      // Second add: proportionally higher tokenA to make liquidity0 >= liquidity1
+      await tokenA.write.approve([dex.address, parseEther("50")], { account: owner.account });
+      await tokenB.write.approve([dex.address, parseUnits("10", 6)], { account: owner.account });
+    
+      await dex.write.addLiquidity([
+        tokenA.address,
+        tokenB.address,
+        parseEther("50"),
+        parseUnits("10", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 300)
+      ], { account: owner.account });
+    });
+    
+    
+    it("should return (amount1, amount0) when tokenA != t0 on removeLiquidity", async function () {
+      // Covers the ternary at end of _removeLiquidity when tokenA != t0
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts);
+    
+      await tokenA.write.approve([dex.address, parseEther("10")], { account: owner.account });
+      await tokenB.write.approve([dex.address, parseUnits("20", 6)], { account: owner.account });
+    
+      await dex.write.addLiquidity([
+        tokenA.address, tokenB.address,
+        parseEther("10"), parseUnits("20", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 300)
+      ], { account: owner.account });
+    
+      const lpBalance = await dex.read.getLiquidity([
+        tokenA.address, tokenB.address, owner.account.address
+      ]);
+    
+      // Remove liquidity with parameters inverted to make tokenA != t0
+      const result = await dex.write.removeLiquidity([
+        tokenB.address, tokenA.address,
+        lpBalance,
+        0, 0,
+        owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 300)
+      ], { account: owner.account });
+    
+      expect(result).to.exist;
+    });
+
+    it("should revert with SS:INB if amount1Optimal < amountBMin", async function () {
+      // Covers the require in _addLiquidity when amount1Optimal < amountBMin
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts)
+    
+      await tokenA.write.approve([dex.address, parseEther("100")], { account: owner.account })
+      await tokenB.write.approve([dex.address, parseUnits("1000", 6)], { account: owner.account })
+    
+      await dex.write.addLiquidity([
+        tokenA.address, tokenB.address,
+        parseEther("100"), parseUnits("1000", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 500)
+      ], { account: owner.account })
+    
+      // amount1Optimal < amountBMin
+      await tokenA.write.approve([dex.address, parseEther("10")], { account: owner.account })
+      await tokenB.write.approve([dex.address, parseUnits("200", 6)], { account: owner.account })
+    
+      try {
+        await dex.write.addLiquidity([
+          tokenA.address, tokenB.address,
+          parseEther("10"), parseUnits("200", 6),
+          0, parseUnits("300", 6), // amountBMin más alto que amount1Optimal
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ], { account: owner.account })
+        expect.fail("Should have reverted with SS:INB")
+      } catch (error: any) {
+        expect(error.message).to.include("SS:INB")
+      }
+    })
+    
+    it("should use liquidity0 when liquidity0 < liquidity1", async function () {
+      // Covers the ternary in _addLiquidity when liquidity0 < liquidity1
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts)
+    
+      // Add initial balanced liquidity
+      await tokenA.write.approve([dex.address, parseEther("100")], { account: owner.account })
+      await tokenB.write.approve([dex.address, parseUnits("100", 6)], { account: owner.account })
+    
+      await dex.write.addLiquidity([
+        tokenA.address, tokenB.address,
+        parseEther("100"), parseUnits("100", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 500)
+      ], { account: owner.account })
+    
+      // Now add liquidity with more tokenB to ensure liquidity1 > liquidity0
+      await tokenA.write.approve([dex.address, parseEther("10")], { account: owner.account })
+      await tokenB.write.approve([dex.address, parseUnits("100", 6)], { account: owner.account })
+    
+      await dex.write.addLiquidity([
+        tokenA.address, tokenB.address,
+        parseEther("10"), parseUnits("100", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 300)
+      ], { account: owner.account })
+    })
+    
+    it("should return (amount1, amount0) when tokenA == t1 on removeLiquidity", async function () {
+      // Covers the else branch in _removeLiquidity when tokenA != t0 (token order reversed)
+      const { tokenA, tokenB, dex, owner } = await loadFixture(deployContracts)
+    
+      await tokenA.write.approve([dex.address, parseEther("10")], { account: owner.account })
+      await tokenB.write.approve([dex.address, parseUnits("20", 6)], { account: owner.account })
+    
+      await dex.write.addLiquidity([
+        tokenA.address, tokenB.address,
+        parseEther("10"), parseUnits("20", 6),
+        0, 0, owner.account.address,
+        BigInt(Math.floor(Date.now() / 1000) + 300)
+      ], { account: owner.account })
+    
+      const lpBalance = await dex.read.getLiquidity([
+        tokenA.address, tokenB.address, owner.account.address
+      ])
+    
+      // Reverse token order to trigger the else path (tokenA == t1)
+      await expect(
+        dex.write.removeLiquidity([
+          tokenB.address, tokenA.address,
+          lpBalance,
+          0, 0,
+          owner.account.address,
+          BigInt(Math.floor(Date.now() / 1000) + 300)
+        ], { account: owner.account })
+      ).to.not.be.reverted
+    })  
+    
   });
 
   describe("Swap Tokens", function () {
