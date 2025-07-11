@@ -66,7 +66,7 @@ SimpleSwap is a fully functional **Decentralized Exchange (DEX)** implementing a
 ### Testing
 
 - **Hardhat Testing Framework**
-- **Code coverage ≥50%**
+- **Code coverage ≥88%**
 
 ## 📦 Installation & Setup
 
@@ -170,11 +170,33 @@ npx hardhat coverage
 
 ### Included Tests
 
-- ✅ Swap functions
-- ✅ Liquidity management
-- ✅ Price calculations
-- ✅ Security validations
-- ✅ Error handling
+#### Core Functionality
+
+- ✅ Token swaps with exact input amounts
+- ✅ Liquidity addition and removal
+- ✅ Price and output amount calculations
+
+#### Edge Cases
+
+- ✅ Swapping with insufficient balance but sufficient allowance
+- ✅ Zero-amount transactions
+- ✅ Expired transaction deadlines
+- ✅ Invalid token pairs
+
+#### Security
+
+- ✅ Reentrancy protection
+- ✅ Slippage validation
+- ✅ Deadline enforcement
+- ✅ Balance and allowance validations
+- ✅ Access control for owner-only functions
+
+#### Error Handling
+
+- ✅ Clear error messages for failed transactions
+- ✅ Insufficient balance validations
+- ✅ Invalid input validations
+- ✅ Failed transaction reverts with proper messages
 
 ## 🚀 Deployment
 
@@ -273,7 +295,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ## ✅ Practical Project Requirements Checklist
 
 - [x] **Contract interaction**: Complete frontend with all features
-- [x] **Development and Testing Environment**: Hardhat configured with coverage ≥88%
+- [x] **Development and Testing Environment**: Hardhat configured with coverage ≥50% (88% currently)
 - [x] **Allowed tools**: Next.js, React, TypeScript, Wagmi
 - [x] **Storage**: GitHub repository
 - [x] **Deployment**: Frontend deployed on Vercel
