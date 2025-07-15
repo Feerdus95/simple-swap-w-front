@@ -324,10 +324,11 @@ contract SimpleSwap is ReentrancyGuard {
     (address t0, address t1) = sortTokens(p.tokenA, p.tokenB);
 
     // Cache storage variables to minimize state reads
-    Pool storage pool = pools[t0][t1];
-    uint112 reserve0 = pool.reserveA;
-    uint112 reserve1 = pool.reserveB;
-    uint112 totalLiquidity = pool.totalLiquidity;
+    (uint112 reserve0, uint112 reserve1, uint112 totalLiquidity) = (
+        pools[t0][t1].reserveA,
+        pools[t0][t1].reserveB,
+        pools[t0][t1].totalLiquidity
+    );
 
     uint256 amount0;
     uint256 amount1;
@@ -370,9 +371,9 @@ contract SimpleSwap is ReentrancyGuard {
     }
 
     // Update state once at the end
-    pool.reserveA = uint112(reserve0 + amount0);
-    pool.reserveB = uint112(reserve1 + amount1);
-    pool.totalLiquidity = uint112(totalLiquidity + newLiquidityMinted);
+    pools[t0][t1].reserveA = uint112(reserve0 + amount0);
+    pools[t0][t1].reserveB = uint112(reserve1 + amount1);
+    pools[t0][t1].totalLiquidity = uint112(totalLiquidity + newLiquidityMinted);
     
     // Update user's liquidity balance
     liquidity[t0][t1][p.to] += uint112(newLiquidityMinted);
@@ -402,10 +403,11 @@ contract SimpleSwap is ReentrancyGuard {
         (address t0, address t1) = sortTokens(p.tokenA, p.tokenB);
         
         // Cache storage variables to minimize state reads
-        Pool storage pool = pools[t0][t1];
-        uint112 reserve0 = pool.reserveA;
-        uint112 reserve1 = pool.reserveB;
-        uint112 totalLiquidity = pool.totalLiquidity;
+        (uint112 reserve0, uint112 reserve1, uint112 totalLiquidity) = (
+            pools[t0][t1].reserveA,
+            pools[t0][t1].reserveB,
+            pools[t0][t1].totalLiquidity
+        );
         uint112 userLiquidity = liquidity[t0][t1][msg.sender];
 
         // Validate pool and user liquidity
@@ -421,9 +423,9 @@ contract SimpleSwap is ReentrancyGuard {
         require(amount1 >= p.amountBMin, "SS:INB");
 
         // Update state once at the end
-        pool.reserveA = uint112(reserve0 - amount0);
-        pool.reserveB = uint112(reserve1 - amount1);
-        pool.totalLiquidity = uint112(totalLiquidity - p.liquidityAmt);
+        pools[t0][t1].reserveA = uint112(reserve0 - amount0);
+        pools[t0][t1].reserveB = uint112(reserve1 - amount1);
+        pools[t0][t1].totalLiquidity = uint112(totalLiquidity - p.liquidityAmt);
         liquidity[t0][t1][msg.sender] = userLiquidity - uint112(p.liquidityAmt);
 
         // Transfer tokens to user
@@ -447,18 +449,9 @@ contract SimpleSwap is ReentrancyGuard {
      * @notice Reverts if reserves are not initialized (pool doesn't exist)
      */
     function getReserves(address tokenA, address tokenB) public view returns (uint112 reserveA, uint112 reserveB) {
-        // Sort tokens to ensure consistent ordering
         (address t0, address t1) = sortTokens(tokenA, tokenB);
-        
-        // Cache storage variables to minimize state reads
-        Pool storage pool = pools[t0][t1];
-        uint112 reserve0 = pool.reserveA;
-        uint112 reserve1 = pool.reserveB;
-        
-        // Validate reserves
+        (uint112 reserve0, uint112 reserve1) = (pools[t0][t1].reserveA, pools[t0][t1].reserveB);
         require(reserve0 > 0 && reserve1 > 0, "SS:RNI");
-        
-        // Return reserves in the original token order
         return tokenA == t0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 
@@ -496,17 +489,11 @@ contract SimpleSwap is ReentrancyGuard {
      */
     function getPrice(address tokenA, address tokenB) external view returns (uint256 price) {
         (address t0, address t1) = sortTokens(tokenA, tokenB);
-        Pool storage pool = pools[t0][t1];
-        
-        // Cache storage variables to minimize state reads
-        uint112 reserveA = pool.reserveA;
-        uint112 reserveB = pool.reserveB;
-        
-        require(reserveA > 0 && reserveB > 0, "SS:RNI");
-
+        (uint112 reserve0, uint112 reserve1) = (pools[t0][t1].reserveA, pools[t0][t1].reserveB);
+        require(reserve0 > 0 && reserve1 > 0, "SS:RNI");
         price = tokenA == t0
-            ? (uint256(reserveB) * 1e18) / reserveA
-            : (uint256(reserveA) * 1e18) / reserveB;
+            ? (uint256(reserve1) * 1e18) / reserve0
+            : (uint256(reserve0) * 1e18) / reserve1;
     }
 
     // --- Internal Helpers ---
