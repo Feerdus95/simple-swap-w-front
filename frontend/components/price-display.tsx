@@ -14,17 +14,6 @@ export function PriceDisplay() {
   const [tokenA, setTokenA] = useState("")
   const [tokenB, setTokenB] = useState("")
 
-  // Get price of tokenA in terms of tokenB
-  const { data: price } = useReadContract({
-    address: SIMPLESWAP_ADDRESS,
-    abi: SIMPLESWAP_ABI,
-    functionName: "getPrice",
-    args: tokenA && tokenB ? [tokenA as Address, tokenB as Address] : undefined,
-    query: {
-      enabled: !!(tokenA && tokenB),
-    },
-  })
-
   // Get pool reserves
   const { data: reserves } = useReadContract({
     address: SIMPLESWAP_ADDRESS,
@@ -33,6 +22,23 @@ export function PriceDisplay() {
     args: tokenA && tokenB ? [tokenA as Address, tokenB as Address] : undefined,
     query: {
       enabled: !!(tokenA && tokenB),
+    },
+  })
+
+  // Prepare arguments for getAmountOut (always 1 unit, 18 decimales)
+  const parsedAmountIn = reserves && tokenA && tokenB ? BigInt(1e18) : undefined;
+  const getAmountOutArgs = tokenA && tokenB && reserves && parsedAmountIn && parsedAmountIn > 0n
+    ? [parsedAmountIn, reserves[0], reserves[1]] as const
+    : undefined;
+
+  // Get expected output amount for 1 unit
+  const { data: expectedOutput } = useReadContract({
+    address: SIMPLESWAP_ADDRESS,
+    abi: SIMPLESWAP_ABI,
+    functionName: "getAmountOut",
+    args: getAmountOutArgs,
+    query: {
+      enabled: !!getAmountOutArgs,
     },
   })
 
@@ -85,7 +91,7 @@ export function PriceDisplay() {
       {/* Price Information */}
       {tokenA && tokenB && (
         <div className="grid gap-4">
-          {/* Current Price */}
+          {/* Current Price using getAmountOut */}
           <Card className="bg-card border border-border">
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-foreground">
@@ -104,10 +110,13 @@ export function PriceDisplay() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {price ? (
+              {expectedOutput !== undefined ? (
                 <div className="text-center">
-                  <div className="text-4xl font-bold mb-2" style={{ color: '#00ADB5' }}>{formatPrice(price as bigint)}</div>
+                  <div className="text-4xl font-bold mb-2" style={{ color: '#00ADB5' }}>{Number(formatEther(expectedOutput)).toLocaleString()}</div>
                   <span className="text-lg text-muted-foreground">{getTokenSymbol(tokenB)}</span>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    This is the actual output you would receive for swapping 1 {getTokenSymbol(tokenA)} to {getTokenSymbol(tokenB)}, including the 0.3% fee.
+                  </div>
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground">
