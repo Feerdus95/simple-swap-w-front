@@ -391,48 +391,48 @@ contract SimpleSwap is ReentrancyGuard {
      * @return amountA Amount of tokenA received
      * @return amountB Amount of tokenB received
      * @notice This function:
-     * - Sorts tokens to ensure consistent ordering
-     * - Calculates token amounts based on LP share
-     * - Burns LP tokens from the sender
-     * - Updates reserves and total liquidity
-     * - Transfers tokens to the specified address
-     * - Emits LiquidityRemoved event
+     * - Sorts tokens for deterministic pool access.
+     * - Reads pool reserves and totalSupply with a single storage access per slot.
+     * - Calculates the proportionate amounts owed based on burned LP tokens.
+     * - Validates user liquidity, minimum amounts, and pool state.
+     * - Updates reserves, total supply, and user LP tokens in storage.
+     * - Transfers proportional token amounts to the specified recipient.
+     * - Emits a LiquidityRemoved event.
      */
-    function _removeLiquidity(RemoveLiquidityParams memory p) internal returns (uint256 amountA, uint256 amountB) {
-        // Sort tokens to ensure consistent ordering
+    function _removeLiquidity(RemoveLiquidityParams memory p)
+        internal
+        returns (uint256 amountA, uint256 amountB)
+    {
         (address t0, address t1) = sortTokens(p.tokenA, p.tokenB);
-        
-        // Cache storage variables to minimize state reads
-        (uint112 reserve0, uint112 reserve1, uint112 totalLiquidity) = (
-            pools[t0][t1].reserveA,
-            pools[t0][t1].reserveB,
-            pools[t0][t1].totalLiquidity
-        );
-        uint112 userLiquidity = liquidity[t0][t1][msg.sender];
+        // Read all pool state in a single access per storage slot.
+        (uint112 reserve0, uint112 reserve1, uint112 totalLiquidity) =
+            (pools[t0][t1].reserveA, pools[t0][t1].reserveB, pools[t0][t1].totalLiquidity);
 
-        // Validate pool and user liquidity
-        require(totalLiquidity > 0, "SS:ITL");
-        require(userLiquidity >= p.liquidityAmt, "SS:ILB");
+        // Scope for userLiquidity to avoid stack too deep error.
+        {
+            uint112 userLiquidity = liquidity[t0][t1][msg.sender];
+            require(totalLiquidity > 0, "SS:ITL");
+            require(userLiquidity >= p.liquidityAmt, "SS:ILB");
+            liquidity[t0][t1][msg.sender] = userLiquidity - uint112(p.liquidityAmt);
+        }
 
-        // Calculate amounts to withdraw based on share of liquidity
+        // Compute withdrawal amounts based on user's share.
         uint256 amount0 = (p.liquidityAmt * reserve0) / totalLiquidity;
         uint256 amount1 = (p.liquidityAmt * reserve1) / totalLiquidity;
 
-        // Validate minimum amounts
         require(amount0 >= p.amountAMin, "SS:INA");
         require(amount1 >= p.amountBMin, "SS:INB");
 
-        // Update state once at the end
+        // Update reserves and supply after withdrawal.
         pools[t0][t1].reserveA = uint112(reserve0 - amount0);
         pools[t0][t1].reserveB = uint112(reserve1 - amount1);
         pools[t0][t1].totalLiquidity = uint112(totalLiquidity - p.liquidityAmt);
-        liquidity[t0][t1][msg.sender] = userLiquidity - uint112(p.liquidityAmt);
 
-        // Transfer tokens to user
+        // Transfer withdrawn tokens to recipient.
         IERC20(t0).safeTransfer(p.to, amount0);
         IERC20(t1).safeTransfer(p.to, amount1);
 
-        // Return amounts in the original token order
+        // Maintain output order as per requested tokens.
         (amountA, amountB) = p.tokenA == t0 ? (amount0, amount1) : (amount1, amount0);
 
         emit LiquidityRemoved(p.tokenA, p.tokenB, amountA, amountB, p.liquidityAmt, p.to);

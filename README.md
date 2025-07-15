@@ -1,7 +1,7 @@
 # SimpleSwap DEX - Module 4 Practical Project
 
 [![MIT License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Coverage Status](https://img.shields.io/badge/coverage-88%25-brightgreen.svg)]()
+[![Coverage Status](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)]()
 [![Vercel](https://vercelbadge.vercel.app/api/datejer/vercel-badge)](https://simple-swap-w-front.vercel.app)
 
 > 🌐 **Live Demo:** [simple-swap-w-front.vercel.app](https://simple-swap-w-front.vercel.app)
@@ -81,8 +81,8 @@ SimpleSwap is a fully functional **Decentralized Exchange (DEX)** implementing a
 - **Hardhat Testing Framework**
 - **Test Suites**: 3 (95 tests in total)
 - **Code coverage**:
-  - **Total**: 100% lines, 88.18% branches, 100% functions
-  - **SimpleSwap.sol**: 100% lines, 86.73% branches, 100% functions
+  - **Total**: 100% lines, 90.91% branches, 100% functions
+  - **SimpleSwap.sol**: 100% lines, 89.8% branches, 100% functions
   - **TestHelper.sol**: 100% lines, 100% branches, 100% functions
   - **TestTokenA.sol**: 100% lines, 100% branches, 100% functions
   - **TestTokenB.sol**: 100% lines, 100% branches, 100% functions
@@ -179,7 +179,7 @@ The app will be available at `http://localhost:3000`
 
 ### Deployed Addresses (Sepolia)
 
-- **SimpleSwap**: `0x4e136525bb27e400a30a0ae63051db55b5d3bff8`
+- **SimpleSwap**: `0xC5fd570BFF105Ec45b0817c86a4d4525ced25bE4`
 - **TestTokenA (TTA)**: `0xd6ae949f6405c366d23cc30422d684b6e76551ca`
 - **TestTokenB (TTB)**: `0xd35dad90ed974961c5299654def0a87478d82a15`
 
@@ -194,7 +194,7 @@ npx hardhat coverage
 
 ## 📊 Test Coverage
 
-The project includes comprehensive tests for all contracts with coverage ≥88%:
+The project includes comprehensive tests for all contracts with coverage ≥90%:
 
 ```bash
 npx hardhat coverage
@@ -327,7 +327,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 ## ✅ Practical Project Requirements Checklist
 
 - [x] **Contract interaction**: Complete frontend with all features
-- [x] **Development and Testing Environment**: Hardhat configured with coverage ≥50% (88% currently)
+- [x] **Development and Testing Environment**: Hardhat configured with coverage ≥50% (90% currently)
 - [x] **Allowed tools**: Next.js, React, TypeScript, Wagmi
 - [x] **Storage**: GitHub repository
 - [x] **Deployment**: Frontend deployed on Vercel

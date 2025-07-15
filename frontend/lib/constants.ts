@@ -1,6 +1,6 @@
 import type { Address } from "viem";
 
-export const SIMPLESWAP_ADDRESS: Address = "0x4e136525bb27e400a30a0ae63051db55b5d3bff8";
+export const SIMPLESWAP_ADDRESS: Address = "0xC5fd570BFF105Ec45b0817c86a4d4525ced25bE4";
 export const SIMPLESWAP_ABI = [
   // Events
   {
